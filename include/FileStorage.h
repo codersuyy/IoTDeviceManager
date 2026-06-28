@@ -18,7 +18,6 @@ public:
     // Trả vector rỗng nếu file không tồn tại hoặc lỗi.
     static std::vector<std::unique_ptr<Device>> load(const std::string& filename);
 
-private:
     // Factory function: dựa vào "typeName" (đọc từ file) để biết nên
     // "new" ra loại class con nào. Đây là cách giải quyết bài toán
     // "đọc dữ liệu generic, tạo lại object đúng loại cụ thể".

@@ -35,7 +35,7 @@ bool FileStorage::save(const std::string& filename,
     file.close();
     return true;
 }
-
+    
 std::unique_ptr<Device> FileStorage::createDeviceByType(
     const std::string& typeName,
     const std::string& id,

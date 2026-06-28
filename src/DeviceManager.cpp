@@ -80,3 +80,29 @@ void DeviceManager::loadFromFile(const std::string& filename) {
     // luôn quyền sở hữu, không cần copy từng phần tử.
     devices_ = FileStorage::load(filename);
 }
+
+void DeviceManager::updateOrCreateDevice(const std::string& typeName,
+                                         const std::string& id,
+                                         const std::string& name,
+                                         const std::string& statusStr,
+                                         int battery,
+                                         const std::string& extra) {
+    Device* existingDevice = findDevice(id);
+    if (existingDevice) {
+        // Cập nhật trạng thái của thiết bị hiện có
+        existingDevice->setStatus(statusStr == "ON" ? DeviceStatus::ON : DeviceStatus::OFF);
+        existingDevice->setBatteryLevel(battery);
+        existingDevice->deserializeExtra(extra);
+    } else {
+        // Tạo thiết bị mới dựa trên typeName
+        auto newDevice = FileStorage::createDeviceByType(typeName, id, name);
+        if (newDevice) {
+            newDevice->setStatus(statusStr == "ON" ? DeviceStatus::ON : DeviceStatus::OFF);
+            newDevice->setBatteryLevel(battery);
+            newDevice->deserializeExtra(extra);
+            addDevice(std::move(newDevice));
+        } else {
+            std::cerr << "Khong the tao thiet bi moi: loai khong hop le (" << typeName << ")\n";
+        }
+    }
+}

@@ -48,6 +48,16 @@ public:
     // Tiện ích gọi FileStorage, giúp main.cpp không cần biết về FileStorage trực tiếp
     bool saveToFile(const std::string& filename) const;
     void loadFromFile(const std::string& filename);
+
+    // Dùng cho MQTT subscriber: nhận dữ liệu đã parse từ message,
+    // nếu thiết bị đã tồn tại (theo id) thì UPDATE, nếu chưa thì TẠO MỚI.
+    // Tái sử dụng FileStorage::createDeviceByType - không viết lại factory.
+    void updateOrCreateDevice(const std::string& typeName,
+                               const std::string& id,
+                               const std::string& name,
+                               const std::string& statusStr,
+                               int battery,
+                               const std::string& extra);
 };
 
 #endif // DEVICE_MANAGER_H
