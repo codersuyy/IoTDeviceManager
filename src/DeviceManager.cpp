@@ -20,8 +20,6 @@ Device* DeviceManager::findDevice(const std::string& id) {
     if (it == devices_.end()) {
         return nullptr; // không tìm thấy
     }
-    // it->get() : lấy con trỏ thường (Device*) ra từ unique_ptr,
-    // KHÔNG chuyển quyền sở hữu, chỉ "mượn" để dùng tạm.
     return it->get();
 }
 
@@ -34,25 +32,46 @@ bool DeviceManager::removeDevice(const std::string& id) {
     if (it == devices_.end()) {
         return false;
     }
-    devices_.erase(it); // unique_ptr tự động gọi delete object bên trong
+    devices_.erase(it);
     return true;
 }
 
 void DeviceManager::simulateAll() {
     for (auto& device : devices_) {
-        device->simulate(); // gọi đa hình - không cần biết loại cụ thể
+        device->simulate();
     }
 }
 
 void DeviceManager::printAllStatus() const {
     std::cout << "===== TRANG THAI " << devices_.size() << " THIET BI =====\n";
     for (const auto& device : devices_) {
-        std::cout << "[" << device->getId() << "] " << device->getName()
-                   << " | " << (device->isOn() ? "ON " : "OFF")
+        std::string id = device->getId();
+
+        // Tra map riêng để biết trạng thái KẾT NỐI - độc lập với
+        // device->isOn() (trạng thái CHỨC NĂNG). Nếu chưa từng nhận
+        // message status nào cho id này, coi như "Unknown".
+        std::string connState = "Unknown";
+        auto it = onlineStatus_.find(id);
+        if (it != onlineStatus_.end()) {
+            connState = it->second ? "ONLINE" : "OFFLINE";
+        }
+
+        std::cout << "[" << id << "] " << device->getName()
+                   << " | Ket noi: " << connState
+                   << " | Chuc nang: " << (device->isOn() ? "ON " : "OFF")
                    << " | Pin: " << device->getBatteryLevel() << "%"
                    << " | " << device->getReadingInfo() << "\n";
     }
     std::cout << "================================\n";
+}
+
+void DeviceManager::setOnlineStatus(const std::string& id, bool online) {
+    onlineStatus_[id] = online;
+}
+
+bool DeviceManager::isOnline(const std::string& id) const {
+    auto it = onlineStatus_.find(id);
+    return it != onlineStatus_.end() && it->second;
 }
 
 void DeviceManager::turnOnDevice(const std::string& id) {
@@ -82,27 +101,28 @@ void DeviceManager::loadFromFile(const std::string& filename) {
 }
 
 void DeviceManager::updateOrCreateDevice(const std::string& typeName,
-                                         const std::string& id,
-                                         const std::string& name,
-                                         const std::string& statusStr,
-                                         int battery,
-                                         const std::string& extra) {
-    Device* existingDevice = findDevice(id);
-    if (existingDevice) {
-        // Cập nhật trạng thái của thiết bị hiện có
-        existingDevice->setStatus(statusStr == "ON" ? DeviceStatus::ON : DeviceStatus::OFF);
-        existingDevice->setBatteryLevel(battery);
-        existingDevice->deserializeExtra(extra);
-    } else {
-        // Tạo thiết bị mới dựa trên typeName
-        auto newDevice = FileStorage::createDeviceByType(typeName, id, name);
-        if (newDevice) {
-            newDevice->setStatus(statusStr == "ON" ? DeviceStatus::ON : DeviceStatus::OFF);
-            newDevice->setBatteryLevel(battery);
-            newDevice->deserializeExtra(extra);
-            addDevice(std::move(newDevice));
-        } else {
-            std::cerr << "Khong the tao thiet bi moi: loai khong hop le (" << typeName << ")\n";
-        }
+                                          const std::string& id,
+                                          const std::string& name,
+                                          const std::string& statusStr,
+                                          int battery,
+                                          const std::string& extra) {
+    Device* existing = findDevice(id);
+
+    if (existing != nullptr) {
+        existing->setStatus(statusStr == "ON" ? DeviceStatus::ON : DeviceStatus::OFF);
+        existing->setBatteryLevel(battery);
+        existing->deserializeExtra(extra);
+        return;
     }
+
+    auto newDevice = FileStorage::createDeviceByType(typeName, id, name);
+    if (newDevice == nullptr) {
+        return; // loại không nhận diện được, FileStorage đã tự in cảnh báo
+    }
+
+    newDevice->setStatus(statusStr == "ON" ? DeviceStatus::ON : DeviceStatus::OFF);
+    newDevice->setBatteryLevel(battery);
+    newDevice->deserializeExtra(extra);
+
+    addDevice(std::move(newDevice));
 }

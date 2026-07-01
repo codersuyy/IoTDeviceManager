@@ -5,10 +5,10 @@
 
 class SecurityCamera : public Device {
 private:
-    bool isRecording_; // trạng thái ghi hình (ON/OFF)
-    std::string resolution_; // độ phân giải video (ví dụ "1080p", "720p")
+    bool isRecording_; 
+    std::string resolution_;
 public:
-    SecurityCamera(const std::string& id, const std::string& description);
+    SecurityCamera(const std::string& id, const std::string& name);
 
     void simulate() override;
     std::string getReadingInfo() const override;

@@ -1,18 +1,15 @@
 #include "SecurityCamera.h"
 #include <cstdlib>   // rand()
-#include <sstream>   // std::ostringstream để format chuỗi
+#include <sstream>   // std::ostringstream, std::istringstream
 
 SecurityCamera::SecurityCamera(const std::string& id, const std::string& name)
     : Device(id, name), isRecording_(false), resolution_("1080p") {
 }
 
 void SecurityCamera::simulate() {
-    if (!isOn()) return; // thiết bị tắt thì không ghi hình
-
-    // Mô phỏng trạng thái ghi hình ngẫu nhiên (ON/OFF)
+    if (!isOn()) return;
     isRecording_ = (rand() % 2 == 0);
 
-    // Mỗi lần simulate tốn một ít pin
     drainBattery(2);
 }
 

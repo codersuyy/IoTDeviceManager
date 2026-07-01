@@ -14,13 +14,8 @@ public:
     static bool save(const std::string& filename,
                       const std::vector<std::unique_ptr<Device>>& devices);
 
-    // Đọc file, trả về 1 vector chứa các Device mới được tạo lại.
-    // Trả vector rỗng nếu file không tồn tại hoặc lỗi.
     static std::vector<std::unique_ptr<Device>> load(const std::string& filename);
 
-    // Factory function: dựa vào "typeName" (đọc từ file) để biết nên
-    // "new" ra loại class con nào. Đây là cách giải quyết bài toán
-    // "đọc dữ liệu generic, tạo lại object đúng loại cụ thể".
     static std::unique_ptr<Device> createDeviceByType(
         const std::string& typeName,
         const std::string& id,
